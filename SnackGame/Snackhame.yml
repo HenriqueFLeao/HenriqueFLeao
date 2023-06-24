@@ -1,51 +1,46 @@
-#include <stdio.h>
-#include <string.h>
-#include <locale.h>
+# Nome da Actions:  
+name: Snake Game
 
-struct cadastro{
-	int codigo;
-	char nome[10];
-	int quantidade;
-	float preco_unitario;
-};
+# Controlador do tempo que sera feito a atualização dos arquivos.
+on:
+  schedule:
+      # Será atualizado a cada 5 horas.
+    - cron: "0 */5 * * *"
 
-int main() {
-	setlocale(LC_ALL, "Portuguese");
-	struct cadastro pecas[10];
-	float valor_total = 0;
-	float maior_valor = 0;
-	float valor_atual = 0;
-	int id_maior_valor = 0;
-	int i;
-	
-	for (i = 0;i < 10; i++) {
-		printf("Digite o codigo da peça %d: ", i+1);
-		scanf("%d", &pecas[i].codigo);
-		
-		printf("Digite o nome da peça %d: ", i+1);
-		scanf("%s", &pecas[i].nome);
-		
-		printf("Digite a quantidade de peças %d: ", i+1);
-		scanf("%d", &pecas[i].quantidade);
-		
-		printf("Digite o preço unitário da peça %d: ", i+1);
-		scanf("%f", &pecas[i].preco_unitario);
-	}
-	
-	for (i = 0; i < 10;i++) {
-		valor_total += pecas[i].quantidade * pecas[i].preco_unitario;
-	}
-	printf("\nValor total do estoque é igual a: %.2f\n", valor_total);
-	
-	maior_valor = pecas[0].quantidade * pecas[0].preco_unitario;
-	for(i = 1;i < 10;i++) {
-		valor_atual = pecas[i].quantidade * pecas[i].preco_unitario;
-		if (valor_atual > maior_valor) {
-			id_maior_valor = i;
-			maior_valor = valor_atual;
-		}
-	}
-	printf("A peça com maior valor em estoque é: código %d, nome %s\n", pecas[id_maior_valor].codigo, pecas[id_maior_valor].nome);
-	
-	return 0;
-}
+# Permite executar na na lista de Actions (utilizado para testes de build).
+  workflow_dispatch:
+
+# Regras
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    # Checks repo under $GITHUB_WORKSHOP, so your job can access it
+      - uses: actions/checkout@v2
+
+    # Repositorio que será utilizado para gerar os arquivos.
+      - uses: Platane/snk@master
+        id: snake-gif
+        with:
+          github_user_name: devalexandre #Seu usuario
+          gif_out_path: dist/github-contribution-grid-snake.gif
+          svg_out_path: dist/github-contribution-grid-snake.svg
+
+      - run: git status
+
+      # Para as atualizações.
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
+          force: true
+
+      - uses: crazy-max/ghaction-github-pages@v2.1.3
+        with:
+          # the output branch we mentioned above
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
